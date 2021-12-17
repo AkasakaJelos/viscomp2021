@@ -39,7 +39,7 @@ function initUfo()
   };
 }
 
-// Unit Asteroids
+// Init Asteroids
 // We randomly initialize the properties
 // so that we find ourselves in a interesting
 // environment.
@@ -92,10 +92,18 @@ function integrate(sphere, dt)
   // Task 1
 
   // Linear
-  // ######
+  sphere.velocity.x += sphere.force.x / sphere.mass * dt
+  sphere.velocity.y += sphere.force.y / sphere.mass * dt
+  sphere.position.x += sphere.velocity.x * dt
+  sphere.position.y += sphere.velocity.y * dt
 
   // Angular
-  // #######
+  sphere.angularVelocity += sphere.torque / sphere.MoI * dt
+  sphere.alpha += sphere.angularVelocity * dt
+}
+
+function dot_2d(v1,v2) {
+  return v1[0] * v2[0] + v1[1] * v2[1]
 }
 
 // Collision handling for two 2D sphere objects. We limit ourselves to linear impulses.
@@ -106,23 +114,34 @@ function sphereSphereCollisionHandling(sphereA, sphereB)
 {
   // Check if collision
   // ##################
-
-  // Task 2a ...
+  distx = sphereA.position.x - sphereB.position.x
+  disty = sphereA.position.y - sphereB.position.y
+  dist = Math.sqrt(distx*distx + disty*disty)
+  if (dist > sphereA.size + sphereB.size) 
+    return
 
   // Project to avoid overlap
   // #############################
+  normx = distx / dist
+  normy = disty / dist
+  overlap = sphereA.size + sphereB.size - dist
+  sphereA.position.x += normx * overlap
+  sphereA.position.y += normy * overlap
 
-  // Task 2b ...
 
   // Compute Impulse
   // ###############
+  epsilon = 0.9 // bounciness
+  normal = [normx, normy]
+  vela_minues_velb = [sphereA.velocity.x - sphereB.velocity.x, sphereA.velocity.y - sphereB.velocity.y]
+  J = -(1+epsilon) * dot_2d(vela_minues_velb, normal) / (dot_2d(normal, normal) * (1/sphereA.mass + 1/sphereB.mass)) 
   
-  // Task 2c ...
-
   // Update Linear
   // #############
-  
-  // Task 2d ...
+  sphereA.velocity.x += J * normx / sphereA.mass
+  sphereA.velocity.y += J * normy / sphereA.mass
+  sphereB.velocity.x -= J * normx  / sphereB.mass
+  sphereB.velocity.y -= J * normy  / sphereB.mass
 }
 
 // If an object goes out of screen, it brings it back to the visible space.
